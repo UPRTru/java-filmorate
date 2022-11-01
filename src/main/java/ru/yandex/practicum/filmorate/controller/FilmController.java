@@ -29,12 +29,14 @@ public class FilmController {
 
     @PutMapping
     public Film updateFilm(@RequestBody Film film) {
-        if (films.containsKey(film.getId())) {
-            log.error("Фильм с id: " + film.getId() + " уже существует");
-            throw new ValidationException("Фильм с id: " + film.getId() + " уже существует");
+        if (!films.containsKey(film.getId())) {
+            log.error("Фильм с id: " + film.getId() +" не найден");
+            throw new ValidationException("Фильм с id: " + film.getId() +" не найден");
         }
         checkDate(film);
-        film.setId(generateId());
+        if (!films.containsKey(film.getId())) {
+            film.setId(generateId());
+        }
         log.info("updateFilm " + film);
         films.put(film.getId(), film);
         return film;
@@ -46,6 +48,10 @@ public class FilmController {
 
     @GetMapping
     public List<Film> getFilms() {
+        if (films.isEmpty()) {
+            log.error("Список фильмов пуст.");
+            throw new ValidationException("Список фильмов пуст.");
+        }
         return new ArrayList<>(films.values());
     }
 

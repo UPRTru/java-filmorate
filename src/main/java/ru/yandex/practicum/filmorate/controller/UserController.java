@@ -25,15 +25,15 @@ public class UserController {
         }
 
         if (checkUserLogin(user.getLogin())) {
-            log.error("Пользователь с логином: " + user.getLogin() + " уже существует");
-            throw new ValidationException("Пользователь с логином: " + user.getLogin() + " уже существует");
+            log.error("Пользователь с таким логином: " + user.getLogin() + " уже существует");
+            throw new ValidationException("Пользователь с таким логином: " + user.getLogin() + " уже существует");
         }
-
-        user.setId(generateId());
 
         if (user.getName() == null || user.getName().equals("")) {
             user.setName(user.getLogin());
         }
+
+        user.setId(generateId());
 
         log.info("newUser " + user);
         users.put(user.getId(), user);
@@ -66,6 +66,10 @@ public class UserController {
     }
 
     private boolean checkUserLogin(String login) {
+        if (login.contains(" ")) {
+            log.error("Логин не может содержать пробелы.");
+            throw new ValidationException("Логин не может содержать пробелы.");
+        }
         boolean result = false;
         for (User user: users.values()) {
             if (user.getLogin().equals(login)) {
