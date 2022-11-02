@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,7 +19,7 @@ public class UserController {
     private int id = 1;
 
     @PostMapping
-    public User newUser(@RequestBody User user) {
+    public User newUser(@Valid @RequestBody User user) {
         if (users.containsKey(user.getId())) {
             log.error("Пользователь с таким id уже существует");
             throw new ValidationException("Пользователь с таким id уже существует");
@@ -45,7 +46,7 @@ public class UserController {
     }
 
     @PutMapping
-    public User updateUser(@RequestBody User user) {
+    public User updateUser(@Valid @RequestBody User user) {
         if (!users.containsKey(user.getId())) {
             log.error("Пользователя с id: " + user.getId() + " не существует.");
             throw new ValidationException("Пользователя с id: " + user.getId() + " не существует.");
@@ -71,7 +72,7 @@ public class UserController {
             throw new ValidationException("Логин не может содержать пробелы.");
         }
         boolean result = false;
-        for (User user: users.values()) {
+        for (User user : users.values()) {
             if (user.getLogin().equals(login)) {
                 result = true;
                 break;

@@ -20,7 +20,7 @@ public class Film {
     @Length(max = 200)
     private String description;
     @NotNull
-    @JsonFormat(pattern="yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date releaseDate;
     @NotNull
     @Positive
