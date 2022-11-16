@@ -30,14 +30,10 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User add(User user) {
-        if (users.containsKey(user.getId())) {
-            log.error("Пользователь с таким id уже существует");
-            throw new ObjectAlreadyExistsException("Пользователь с таким id уже существует");
-        }
+        checkUserLogin(user.getLogin());
         if (user.getName() == null || user.getName().equals("")) {
             user.setName(user.getLogin());
         }
-        checkUserLogin(user.getLogin());
         user.setId(generateId());
         log.info("newUser " + user);
         users.put(user.getId(), user);
@@ -47,10 +43,10 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public User update(User user) {
         checkUserId(user.getId());
+        checkUserLogin(user.getLogin());
         if (user.getName() == null || user.getName().equals("")) {
             user.setName(user.getLogin());
         }
-        checkUserLogin(user.getLogin());
         log.info("updateUser " + user);
         users.put(user.getId(), user);
         return user;

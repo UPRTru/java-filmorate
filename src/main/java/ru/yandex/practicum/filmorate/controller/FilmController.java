@@ -28,8 +28,8 @@ public class FilmController {
         return filmService.getById(id);
     }
 
-    @GetMapping("/popular?count={count}")
-    public List<Film> popular(@PathVariable int count) {
+    @GetMapping("/popular")
+    public List<Film> popular(@RequestParam(defaultValue = "10") int count) {
         if (count <= 0) {
             return filmService.listPopularFilms(10);
         } else {
