@@ -2,13 +2,15 @@ package ru.yandex.practicum.filmorate.services;
 
 import java.util.List;
 
-public abstract class Service<T> {
+public interface Service<T> {
 
-    public abstract T add(T t);
+    T add(T t);
 
-    public abstract T update(T t);
+    T update(T t);
 
-    public abstract List<T> getAll();
+    List<T> getAll();
 
-    public abstract void clearAll();
+    T getById(Long id);
+
+    void clearAll();
 }

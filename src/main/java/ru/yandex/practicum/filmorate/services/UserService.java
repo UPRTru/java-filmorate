@@ -1,80 +1,90 @@
 package ru.yandex.practicum.filmorate.services;
 
 import lombok.extern.slf4j.Slf4j;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import org.springframework.beans.factory.annotation.Autowired;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
-public class UserService extends Service<User> {
-    private final Map<Integer, User> users = new HashMap<>();
-    private int id = 1;
+@org.springframework.stereotype.Service
+public class UserService implements Service<User> {
+    private final UserStorage userStorage;
 
-    private int generateId() {
-        return id++;
+    @Autowired
+    public UserService(UserStorage userStorage) {
+        this.userStorage = userStorage;
     }
 
     @Override
     public User add(User user) {
-        if (users.containsKey(user.getId())) {
-            log.error("Пользователь с таким id уже существует");
-            throw new ValidationException("Пользователь с таким id уже существует");
-        }
-        if (user.getName() == null || user.getName().equals("")) {
-            user.setName(user.getLogin());
-        }
-        checkUserLogin(user.getLogin());
-        user.setId(generateId());
-        log.info("newUser " + user);
-        users.put(user.getId(), user);
-        return user;
+        return userStorage.add(user);
     }
 
     @Override
     public User update(User user) {
-        if (!users.containsKey(user.getId())) {
-            log.error("Пользователя с id: " + user.getId() + " не существует.");
-            throw new ValidationException("Пользователя с id: " + user.getId() + " не существует.");
-        }
-        if (user.getName() == null || user.getName().equals("")) {
-            user.setName(user.getLogin());
-        }
-        checkUserLogin(user.getLogin());
-        log.info("updateUser " + user);
-        users.put(user.getId(), user);
-        return user;
-    }
-
-    private void checkUserLogin(String login) {
-        if (login.contains(" ")) {
-            log.error("Логин не может содержать пробелы.");
-            throw new ValidationException("Логин не может содержать пробелы.");
-        }
-        boolean checkFoundLogin = false;
-        for (User user : users.values()) {
-            if (user.getLogin().equals(login)) {
-                checkFoundLogin = true;
-                break;
-            }
-        }
-        if (checkFoundLogin) {
-            log.error("Пользователь с таким логином: " + login + " уже существует");
-            throw new ValidationException("Пользователь с таким логином: " + login + " уже существует");
-        }
+        return userStorage.update(user);
     }
 
     @Override
     public List<User> getAll() {
-        return new ArrayList<>(users.values());
+        return userStorage.getAll();
+    }
+
+    @Override
+    public User getById(Long id) {
+        return userStorage.getUser(id);
     }
 
     @Override
     public void clearAll() {
-        users.clear();
-        id = 1;
+        userStorage.clearAll();
+    }
+
+    public void addFriend(Long idUserOne, Long idUserTwo) {
+        if (checkUserId(idUserOne) && checkUserId(idUserTwo)) {
+            userStorage.getUser(idUserOne).addFriend(idUserTwo);
+            userStorage.getUser(idUserTwo).addFriend(idUserOne);
+        }
+        log.info(userStorage.getUser(idUserOne).getName() + " friend " + userStorage.getUser(idUserTwo).getName());
+    }
+
+    public void removeFriend(Long idUserOne, Long idUserTwo) {
+        if (checkUserId(idUserOne) && checkUserId(idUserTwo)) {
+            userStorage.getUser(idUserOne).removeFriend(idUserTwo);
+            userStorage.getUser(idUserTwo).removeFriend(idUserOne);
+        }
+        log.info(userStorage.getUser(idUserOne).getName() + " remove friend " + userStorage.getUser(idUserTwo).getName());
+    }
+
+    private boolean checkUserId(Long id) {
+        if (userStorage.getUser(id) == null) {
+            throw new NotFoundException("id" + id + " пользователь не найден.");
+        }
+        return userStorage.getUser(id) != null;
+    }
+
+    public List<User> getFriends(Long id) {
+        List<User> result = new ArrayList<>();
+        if (checkUserId(id)) {
+            for (Long idFriend : userStorage.getUser(id).getFriends()) {
+                result.add(userStorage.getUser(idFriend));
+            }
+        }
+        return result;
+    }
+
+    public List<User> commonFriends(Long idOne, Long idTwo) {
+        List<User> result = new ArrayList<>();
+        if (checkUserId(idOne) && checkUserId(idTwo)) {
+            for (Long id : userStorage.getUser(idOne).getFriends()) {
+                if (userStorage.getUser(idTwo).getFriends().contains(id)) {
+                    result.add(userStorage.getUser(id));
+                }
+            }
+        }
+        return result;
     }
 }
