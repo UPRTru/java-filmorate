@@ -2,10 +2,10 @@ package ru.yandex.practicum.filmorate.services;
 
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ObjectAlreadyExistsException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
+import javax.validation.ValidationException;
 import java.util.Calendar;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
