@@ -27,15 +27,23 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film add(Film film) {
-        if (films.containsKey(film.getId())) {
-            log.error("Фильм с id: " + film.getId() + " уже существует");
-            throw new ObjectAlreadyExistsException("Фильм с id: " + film.getId() + " уже существует");
-        }
+        checkFilm(film);
         checkDate(film);
         film.setId(generateId());
         log.info("addFilm " + film);
         films.put(film.getId(), film);
         return film;
+    }
+
+    private void checkFilm(Film film) {
+        for (Film f : films.values()) {
+            if (f.getName().equals(film.getName())) {
+                if (f.getReleaseDate() == film.getReleaseDate()) {
+                    log.error("Такой фильм уже существует " + film);
+                    throw new ObjectAlreadyExistsException("Такой фильм уже существует " + film);
+                }
+            }
+        }
     }
 
     private void checkDate(Film film) {

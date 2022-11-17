@@ -39,7 +39,7 @@ class TestFilmService extends TestService {
         assertEquals(filmService.getAll().get(0) , film, "Фильмы должны совпадать.");
         film.setId(1L);
         thrown = assertThrows(ObjectAlreadyExistsException.class, () -> filmService.add(film));
-        assertEquals("Фильм с id: 1 уже существует", thrown.getMessage());
+        assertEquals("Такой фильм уже существует " + film, thrown.getMessage());
         film.setId(2L);
         thrown = assertThrows(NotFoundException.class, () -> filmService.update(film));
         assertEquals("Фильм с id: 2 не найден", thrown.getMessage());

@@ -33,9 +33,6 @@ public class TestUserService extends TestService {
         user.setLogin("Login");
         userService.add(user);
         assertEquals(userService.getAll().get(0), user, "Пользователи должна совпадать.");
-        user.setId(1L);
-        thrown = assertThrows(ObjectAlreadyExistsException.class, () -> userService.add(user));
-        assertEquals("Пользователь с таким id уже существует", thrown.getMessage());
         user.setId(0L);
         thrown = assertThrows(ObjectAlreadyExistsException.class, () -> userService.add(user));
         assertEquals("Пользователь с таким логином: Login уже существует", thrown.getMessage());

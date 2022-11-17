@@ -48,29 +48,26 @@ public class FilmService implements Service<Film> {
     }
 
     public Film addLike(Long filmId, Long userId) {
-        if (checkExistUserAndFilm(filmId, userId)) {
-            filmStorage.getFilm(filmId).addLike(userId);
-        }
+        checkExistUserAndFilm(filmId, userId);
+        filmStorage.getFilm(filmId).addLike(userId);
         log.info(filmStorage.getFilm(filmId).getName() + " like film. User - " + userStorage.getUser(userId).getName());
         return filmStorage.getFilm(filmId);
     }
 
     public Film removeLike(Long filmId, Long userId) {
-        if (checkExistUserAndFilm(filmId, userId)) {
-            filmStorage.getFilm(filmId).removeLike(userId);
-        }
+        checkExistUserAndFilm(filmId, userId);
+        filmStorage.getFilm(filmId).removeLike(userId);
         log.info(filmStorage.getFilm(filmId).getName() + " remove like film. User - " + userStorage.getUser(userId).getName());
         return filmStorage.getFilm(filmId);
     }
 
-    private boolean checkExistUserAndFilm(Long filmId, Long userId) {
+    private void checkExistUserAndFilm(Long filmId, Long userId) {
         if (userStorage.getUser(userId) == null) {
             throw new NotFoundException("Пользователь не найден.");
         }
         if (filmStorage.getFilm(filmId) == null) {
             throw new NotFoundException("Фильм не найден.");
         }
-        return filmStorage.getFilm(filmId) != null && userStorage.getUser(userId) != null;
     }
 
     public List<Film> listPopularFilms(int limit) {
