@@ -40,7 +40,7 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     private void checkDate(Film film) {
         Calendar calendar = Calendar.getInstance();
-        calendar.set(1895, Calendar.DECEMBER, 27,23,59);
+        calendar.set(1895, Calendar.DECEMBER, 27, 23, 59);
         if (film.getReleaseDate().before(calendar.getTime())) {
             log.error("дата релиза — не раньше 28 декабря 1895 года");
             throw new ValidationException("дата релиза — не раньше 28 декабря 1895 года");

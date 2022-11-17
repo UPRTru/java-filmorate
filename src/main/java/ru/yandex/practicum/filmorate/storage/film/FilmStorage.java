@@ -8,8 +8,12 @@ import java.util.List;
 @Component
 public interface FilmStorage {
     List<Film> getAll();
+
     Film add(Film film);
+
     Film update(Film film);
+
     Film getFilm(Long id);
+
     void clearAll();
 }
