@@ -63,10 +63,12 @@ public class FilmService implements Service<Film> {
 
     private void checkExistUserAndFilm(Long filmId, Long userId) {
         if (userStorage.getUser(userId) == null) {
-            throw new NotFoundException("Пользователь не найден.");
+            log.error("Пользователь id" + userId + " не найден.");
+            throw new NotFoundException("Пользователь id" + userId + " не найден.");
         }
         if (filmStorage.getFilm(filmId) == null) {
-            throw new NotFoundException("Фильм не найден.");
+            log.error("Фильм id" + filmId + " не найден.");
+            throw new NotFoundException("Фильм id" + filmId + " не найден.");
         }
     }
 

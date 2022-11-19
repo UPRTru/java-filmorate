@@ -26,4 +26,10 @@ public class ExceptionHandler {
     public Map<String, String> validationException(final ValidationException e) {
         return Map.of("error", e.getMessage());
     }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> yourselfException(final YourselfException e) {
+        return Map.of("error", e.getMessage());
+    }
 }
