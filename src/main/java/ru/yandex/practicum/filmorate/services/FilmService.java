@@ -1,65 +1,79 @@
 package ru.yandex.practicum.filmorate.services;
 
 import lombok.extern.slf4j.Slf4j;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import org.springframework.beans.factory.annotation.Autowired;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
-public class FilmService extends Service<Film> {
-    private final Map<Integer, Film> films = new HashMap<>();
-    private int id = 1;
+@org.springframework.stereotype.Service
+public class FilmService implements Service<Film> {
+    private final FilmStorage filmStorage;
+    private final UserStorage userStorage;
 
-    private int generateId() {
-        return id++;
+    @Autowired
+    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
+        this.filmStorage = filmStorage;
+        this.userStorage = userStorage;
     }
 
     @Override
     public Film add(Film film) {
-        if (films.containsKey(film.getId())) {
-            log.error("Фильм с id: " + film.getId() + " уже существует");
-            throw new ValidationException("Фильм с id: " + film.getId() + " уже существует");
-        }
-        checkDate(film);
-        film.setId(generateId());
-        log.info("addFilm " + film);
-        films.put(film.getId(), film);
-        return film;
-    }
-
-    private void checkDate(Film film) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(1895, Calendar.DECEMBER, 27,23,59);
-        if (film.getReleaseDate().before(calendar.getTime())) {
-            log.error("дата релиза — не раньше 28 декабря 1895 года");
-            throw new ValidationException("дата релиза — не раньше 28 декабря 1895 года");
-        }
+        return filmStorage.add(film);
     }
 
     @Override
     public Film update(Film film) {
-        if (!films.containsKey(film.getId())) {
-            log.error("Фильм с id: " + film.getId() + " не найден");
-            throw new ValidationException("Фильм с id: " + film.getId() + " не найден");
-        }
-        checkDate(film);
-        if (!films.containsKey(film.getId())) {
-            film.setId(generateId());
-        }
-        log.info("updateFilm " + film);
-        films.put(film.getId(), film);
-        return film;
+        return filmStorage.update(film);
     }
 
     @Override
     public List<Film> getAll() {
-        return new ArrayList<>(films.values());
+        return filmStorage.getAll();
+    }
+
+    @Override
+    public Film getById(Long id) {
+        return filmStorage.getFilm(id);
     }
 
     @Override
     public void clearAll() {
-        films.clear();
-        id = 1;
+        filmStorage.clearAll();
+    }
+
+    public Film addLike(Long filmId, Long userId) {
+        checkExistUserAndFilm(filmId, userId);
+        filmStorage.getFilm(filmId).addLike(userId);
+        log.info(filmStorage.getFilm(filmId).getName() + " like film. User - " + userStorage.getUser(userId).getName());
+        return filmStorage.getFilm(filmId);
+    }
+
+    public Film removeLike(Long filmId, Long userId) {
+        checkExistUserAndFilm(filmId, userId);
+        filmStorage.getFilm(filmId).removeLike(userId);
+        log.info(filmStorage.getFilm(filmId).getName() + " remove like film. User - " + userStorage.getUser(userId).getName());
+        return filmStorage.getFilm(filmId);
+    }
+
+    private void checkExistUserAndFilm(Long filmId, Long userId) {
+        if (userStorage.getUser(userId) == null) {
+            throw new NotFoundException("Пользователь не найден.");
+        }
+        if (filmStorage.getFilm(filmId) == null) {
+            throw new NotFoundException("Фильм не найден.");
+        }
+    }
+
+    public List<Film> listPopularFilms(int limit) {
+        List<Film> sortedFilms = filmStorage.getAll();
+        sortedFilms.sort((f1, f2) -> Integer.compare(f2.getLikes().size(), f1.getLikes().size()));
+        log.info("get popular films");
+        return sortedFilms.stream().limit(limit).collect(Collectors.toList());
     }
 }
