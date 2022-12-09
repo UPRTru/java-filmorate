@@ -1,47 +1,47 @@
 package ru.yandex.practicum.filmorate.services;
 
+import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ObjectAlreadyExistsException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.film.memory.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.memory.InMemoryUserStorage;
 
 import javax.validation.ValidationException;
-import java.util.Calendar;
+import java.time.LocalDate;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
-class TestFilmService extends TestService {
+class TestFilmService {
     FilmService filmService = new FilmService(new InMemoryFilmStorage(), new InMemoryUserStorage());
 
-    @Override
-    protected FilmService getService() {
-        return filmService;
-    }
+    @Test
+    void TestFilm() {
+        assertNotNull(filmService.getAll(), "HashMap должна быть проинициализирована.");
+        assertEquals(filmService.getAll().size(), 0, "HashMap должна быть пустой.");
 
-    @Override
-    protected void custom() {
-        Film film = new Film();
+        Film film = Film.builder().build();
         Exception thrown;
         assertThrows(NullPointerException.class, () -> filmService.add(film));
         film.setName("Name");
         film.setDescription("Description");
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(1895, Calendar.DECEMBER, 27,0,0);
-        film.setReleaseDate(calendar.getTime());
+        film.setReleaseDate(LocalDate.of(1895, 12, 27));
         film.setDuration(0);
         thrown = assertThrows(ValidationException.class, () -> filmService.add(film));
         assertEquals("дата релиза — не раньше 28 декабря 1895 года", thrown.getMessage());
-        calendar.set(1895, Calendar.DECEMBER, 28,0,0);
-        film.setReleaseDate(calendar.getTime());
+        film.setReleaseDate(LocalDate.of(1895, 12, 28));
         filmService.add(film);
-        assertEquals(filmService.getAll().get(0) , film, "Фильмы должны совпадать.");
+        assertEquals(filmService.getAll().get(0), film, "Фильмы должны совпадать.");
         film.setId(1L);
         thrown = assertThrows(ObjectAlreadyExistsException.class, () -> filmService.add(film));
         assertEquals("Такой фильм уже существует " + film, thrown.getMessage());
         film.setId(2L);
         thrown = assertThrows(NotFoundException.class, () -> filmService.update(film));
-        assertEquals("Фильм с id: 2 не найден", thrown.getMessage());
+        assertEquals("Фильм 2 не найден.", thrown.getMessage());
+
+        assertNotNull(filmService.getAll(), "HashMap не должна быть пустой.");
+        assertEquals(filmService.getAll().size(), 1, "В HashMap должна быть одна запись.");
+        filmService.clearAll();
+        assertEquals(filmService.getAll().size(), 0, "HashMap должна быть пустой.");
     }
 }

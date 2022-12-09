@@ -1,13 +1,17 @@
-package ru.yandex.practicum.filmorate.storage.film;
+package ru.yandex.practicum.filmorate.storage.film.memory;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ObjectAlreadyExistsException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
-import javax.validation.ValidationException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -27,41 +31,24 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film add(Film film) {
-        checkFilm(film);
-        checkDate(film);
         film.setId(generateId());
         log.info("addFilm " + film);
         films.put(film.getId(), film);
         return film;
     }
 
-    private void checkFilm(Film film) {
+    @Override
+    public void checkNotFoundFilm(Film film) {
         for (Film f : films.values()) {
-            if (f.getName().equals(film.getName())) {
-                if (f.getReleaseDate() == film.getReleaseDate()) {
-                    log.error("Такой фильм уже существует " + film);
-                    throw new ObjectAlreadyExistsException("Такой фильм уже существует " + film);
-                }
+            if (f.getName().equals(film.getName()) && f.getReleaseDate().equals(film.getReleaseDate())) {
+                log.error("Такой фильм уже существует " + film);
+                throw new ObjectAlreadyExistsException("Такой фильм уже существует " + film);
             }
-        }
-    }
-
-    private void checkDate(Film film) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(1895, Calendar.DECEMBER, 27, 23, 59);
-        if (film.getReleaseDate().before(calendar.getTime())) {
-            log.error("дата релиза — не раньше 28 декабря 1895 года");
-            throw new ValidationException("дата релиза — не раньше 28 декабря 1895 года");
         }
     }
 
     @Override
     public Film update(Film film) {
-        if (!films.containsKey(film.getId())) {
-            log.error("Фильм с id: " + film.getId() + " не найден");
-            throw new NotFoundException("Фильм с id: " + film.getId() + " не найден");
-        }
-        checkDate(film);
         if (!films.containsKey(film.getId())) {
             film.setId(generateId());
         }
@@ -72,16 +59,38 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film getFilm(Long id) {
-        checkFilm(id);
         log.info("getFilm " + id);
         return films.getOrDefault(id, null);
     }
 
-    private void checkFilm(Long id) {
+    @Override
+    public void checkIdFilm(Long id) {
         if (!films.containsKey(id)) {
             log.error("Фильм " + id + " не найден.");
             throw new NotFoundException("Фильм " + id + " не найден.");
         }
+    }
+
+    @Override
+    public Film addLike(Long filmId, Long userId) {
+        films.get(filmId).addLike(userId);
+        log.info(films.get(filmId).getName() + " like film. User id - " + userId);
+        return films.get(filmId);
+    }
+
+    @Override
+    public Film removeLike(Long filmId, Long userId) {
+        films.get(filmId).removeLike(userId);
+        log.info(films.get(filmId).getName() + " remove like film. User id - " + userId);
+        return films.get(filmId);
+    }
+
+    @Override
+    public List<Film> listPopularFilms(int limit) {
+        List<Film> sortedFilms = getAll();
+        sortedFilms.sort((f1, f2) -> Integer.compare(f2.getLikes().size(), f1.getLikes().size()));
+        log.info("get popular films");
+        return sortedFilms.stream().limit(limit).collect(Collectors.toList());
     }
 
     @Override
